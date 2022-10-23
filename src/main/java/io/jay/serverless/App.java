@@ -1,5 +1,6 @@
 package io.jay.serverless;
 
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,8 +33,15 @@ public class App {
 
     @Bean
     public Function<String, List<Order>> orderByName() {
-        return (name) -> orderRepository.findAll().stream()
-                .filter(order -> name.equals(order.getName()))
+        return (orderName) -> orderRepository.findAll().stream()
+                .filter(order -> orderName.equals(order.getName()))
+                .collect(Collectors.toList());
+    }
+
+    @Bean
+    public Function<APIGatewayProxyRequestEvent, List<Order>> handleGatewayRequest() {
+        return (requestEvent) -> orderRepository.findAll().stream()
+                .filter(order -> requestEvent.getQueryStringParameters().get("orderName").equals(order.getName()))
                 .collect(Collectors.toList());
     }
 }
